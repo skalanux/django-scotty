@@ -1,0 +1,82 @@
+{% if show_action_buttons %}
+<div class="d-flex justify-content-end align-items-center gap-2 mb-2">
+
+    {% if 'filtrar' in show_action_buttons %}
+    <button type="submit" name="submit" class="btn btn-primary">
+      <i class="bi bi-funnel-fill"></i> Filtrar
+    </button>
+    {% endif %}
+
+    {% if 'exportar' in show_action_buttons or 'exportar_xls' in show_action_buttons %}
+    <button type="button" class="btn btn-primary" onclick="exportXLSX(this)">
+      <i class="bi bi-download"></i> Exportar XLSX
+    </button>
+    {% endif %}
+
+    {% if 'limpiar' in show_action_buttons %}
+    <button type="button" class="btn btn-secondary" id="clear-filters-btn-{{table.unique_id}}">
+      Limpiar filtros
+    </button>
+    {% endif %}
+
+  </div>
+
+  <script>
+    (() => {
+      const attachClearFiltersBtn = () => {
+        const btn = document.getElementById(`clear-filters-btn-{{table.unique_id}}`);
+        if (btn && !btn.dataset.listenerAttached) {
+          btn.addEventListener("click", () => {
+            const form = btn.closest("form");
+            if (form) {
+              Array.from(form.elements).forEach(el => {
+                if (el.tagName === "INPUT" && ["text", "number", "date", "search"].includes(el.type)) {
+                  el.value = "";
+                } else if (el.tagName === "SELECT") {
+                  el.selectedIndex = 0;
+                } else if (el.tagName === "INPUT" && ["checkbox", "radio"].includes(el.type)) {
+                  el.checked = false;
+                }
+              });
+              if (typeof form.requestSubmit === "function") {
+                form.requestSubmit();
+              } else {
+                form.submit();
+              }
+            }
+          });
+          btn.dataset.listenerAttached = "true";
+        }
+      };
+      document.addEventListener("DOMContentLoaded", attachClearFiltersBtn);
+      document.body.addEventListener("htmx:afterSettle", attachClearFiltersBtn);
+    })();
+
+    function exportXLSX(button) {
+        // Get the current form data
+        const form = button.closest('form');
+        const formData = new FormData(form);
+
+        // Add the export parameter
+        formData.append('_export', 'xlsx');
+
+        // Get the URL from the form's hx-get attribute
+        const formAction = form.getAttribute('hx-get') || form.action || window.location.pathname;
+        const params = new URLSearchParams();
+
+        // Add form data to URL parameters
+        for (let [key, value] of formData.entries()) {
+            params.append(key, value);
+        }
+
+        // Build the complete URL
+        const downloadUrl = formAction + '?' + params.toString();
+        window.open(downloadUrl, '_blank');
+    }
+
+    function confirmAction(action) {
+      alert(action);
+    }
+
+  </script>
+{% endif %}

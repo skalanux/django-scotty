@@ -1,0 +1,74 @@
+{% extends request.htmx|yesno:"dummy.html,rrhh/baseHR.html" %}
+{% load django_tables2 %}
+{% load crispy_forms_tags %}
+
+{% block rrhhcontent %}
+<div id="{{ table.unique_id }}">
+  <h2 class="h3 pt-2 mb-0">{{ table.title }}</h2>
+  <form hx-get="{{ request.path_info }}"
+        hx-swap="innerHTML" hx-target="#{{ table.unique_id }}"
+    class="form" style="margin-bottom: 10px; margin-top:7px">
+
+      {% if show_filter_line %}
+          {% for key, value in request.GET.items %}
+              {% if not filter or key not in filter.form.fields %}
+                  <input type="hidden" name="{{ key }}" value="{{ value }}">
+              {% endif %}
+          {% endfor %}
+        <div class="d-flex justify-content-end align-items-center gap-2 mb-2">
+            {% if show_export_xls %}
+            <button type="button" class="btn btn-primary" onclick="exportXLSX(this)">
+              <i class="bi bi-download"></i> Exportar XLSX
+            </button>
+            {% endif %}
+          </div>
+      {% endif %}
+  </form>
+{% if table.url_action_method %}
+  <form hx-post="{% url table.url_action_method %}"
+        hx-swap="innerHTML" hx-target="#{{ table.unique_id }}" >
+        {% csrf_token %}
+        {% if table.available_actions %}
+        <div class="bulk-actions">
+          {% for action_id, action_name in table.available_actions %}
+          {% if forloop.first %}
+          <label for="action">Acción sobre seleccionados:</label>
+          <select name="action" id="action" class="select form-select" style="display:inline!important;width:200px;">
+            {% endif %}
+            <option value="{{ action_id }}">{{ action_name }}</option>
+
+            {% if forloop.last %}
+          </select>
+          <button class="btn btn-primary" type="submit"><i class="bi bi-gear"></i> Ejecutar</button>
+          {% endif %}
+          {% endfor %}
+
+      {% if table.page.number %}
+      {% with request.GET.urlencode as query_string %}
+      {% if query_string %}
+      <input type="hidden" name="filter_query_string" value="{{ query_string }}">
+      {% endif %}
+      {% endwith %}
+      {% endif %}
+    </div>
+    {% endif %}
+
+{% endif %}
+{% if table.data %}
+    <h2>{{ table.title }}</h2>
+    {% render_table table 'django_tables2/rioja_table_template_dict.html' %}
+{% else %}
+    <div class="row justify-content-center">
+    <div class="col-12 text-center">
+        <div>Aún no hay datos de presentismo para la fecha seleccionada.</div>
+    </div>
+</div>
+{% endif %}
+
+{% if table.url_action_method %}
+</form>
+
+{% endif %}
+
+{% endblock rrhhcontent %}
+</div>

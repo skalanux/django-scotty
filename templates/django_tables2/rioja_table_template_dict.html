@@ -1,0 +1,114 @@
+{% load django_tables2 %}
+{% include '_common/_spinner.html' %}
+{% load i18n l10n %}
+{% block table-wrapper %}
+<div class="table-container" style="overflow: auto">
+  {% block table %}
+  <div id="tabla_wrapper" class="dataTables_wrapper no-footer">
+    <table {% render_attrs table.attrs class="table table-light table-bordered rounded-table text-center dataTable no-footer" %}>
+      {% block table.thead %}
+      {% if table.show_header %}
+      <thead {{ table.attrs.thead.as_html }} style="--bs-table-bg: #e2e3e5;  position: sticky; top: 0; background-color: #f8f9fa; z-index: 1;">
+        <tr>
+          {% for column in table.columns %}
+          <th {{ column.attrs.th.as_html }}
+            hx-trigger="click"
+            hx-get="{{ request.path }}{% querystring table.prefixed_order_by_field=column.order_by_alias.next %}"
+            hx-target="#{{ table.unique_id }}"
+            style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center">
+            {% if column.orderable %}
+            <div style="cursor: pointer; user-select: none; display:inline">{{ column.header }}</div>
+            {% else %}
+            {{ column.header }}
+            {% endif %}
+          </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      {% endif %}
+      {% endblock table.thead %}
+      {% block table.tbody %}
+      <tbody {{ table.attrs.tbody.as_html }}>
+        {% for row in table.paginated_rows %}
+        {% block table.tbody.row %}
+        <tr {{ row.attrs.as_html }}>
+          {% for column, cell in row.items %}
+          <td {{ column.attrs.td.as_html }} class='text-center align-middle '>{% if column.localize == None %}{{ cell }}{% else %}{% if column.localize %}{{ cell|localize|truncatechars:30  }}{% else %}{{ cell|unlocalize|truncatechars:30  }}{% endif %}{% endif %}</td>
+          {% endfor %}
+        </tr>
+        {% endblock table.tbody.row %}
+        {% empty %}
+        {% if table.empty_text %}
+        {% block table.tbody.empty_text %}
+        <tr><td colspan="{{ table.columnlength }}">{{ table.empty_text }}</td></tr>
+        {% endblock table.tbody.empty_text %}
+        {% endif %}
+        {% endfor %}
+      </tbody>
+      {% endblock table.tbody %}
+      {% block table.tfoot %}
+      {% if table.has_footer %}
+      <tfoot {{ table.attrs.tfoot.as_html }}>
+        <tr>
+          {% for column in table.columns %}
+          <td {{ column.attrs.tf.as_html }}>{{ column.footer }}</td>
+          {% endfor %}
+        </tr>
+      </tfoot>
+      {% endif %}
+      {% endblock table.tfoot %}
+    </table>
+
+    <!-- Dejo sin cerrar el dataTables_wrapper, lo cierro luego -->
+    {% endblock table %}
+
+    {% block pagination %}
+    <!-- El br no está en el diseño original, pero quedaba muy pegado -->
+    <br />
+    <div class="dataTables_info" id="tabla_info" role="status" aria-live="polite">
+      <p>Mostrando registros del {{ table.page.start_index }} al {{ table.page.end_index }} de un total de {{ table.paginator.count }} registros
+      </p>
+    </div>
+
+    <div class="dataTables_paginate paging_simple_numbers" id="tabla_paginate">
+      <a class="paginate_button previous {% if not table.page.has_previous %}disabled{% endif %}"
+         aria-controls="tabla"
+         id="tabla_previous"
+         {% if table.page.has_previous %}
+         hx-trigger="click"
+         hx-get="{{ request.path }}{% querystring table.prefixed_page_field=table.page.previous_page_number %}"
+         {% endif %}
+         >Anterior</a>
+
+      {% for p in table.page|table_page_range:table.paginator %}
+      <span>
+        {% if p == '...' %}
+        <a>{{ p }}</a>
+        {% else %}
+        <a class="paginate_button {% if p == table.page.number %}current{% endif %}"
+           hx-trigger="click"
+           hx-get="{{ request.path }}{% querystring table.prefixed_page_field=p %}"
+           aria-controls="tabla"
+           >
+           {{ p }}
+        </a>
+          {% endif %}
+      </span>
+      {% endfor %}
+
+      <a class="paginate_button next {% if not table.page.has_next %}disabled{% endif %}"
+         aria-controls="tabla"
+         id="tabla_previous"
+         {% if table.page.has_next %}
+         hx-trigger="click"
+         hx-get="{{ request.path }}{% querystring table.prefixed_page_field=table.page.next_page_number %}"
+         {% endif %}
+         >Siguiente</a>
+    </div>
+    <!-- Cierro el dataTables_wrapper -->
+  </div>
+
+
+  {% endblock pagination %}
+</div>
+{% endblock table-wrapper %}

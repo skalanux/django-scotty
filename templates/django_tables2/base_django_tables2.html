@@ -1,0 +1,118 @@
+{% extends request.htmx|yesno:"dummy.html,rrhh/baseHR.html" %}
+{% load django_tables2 %}
+{% load crispy_forms_tags %}
+
+{% block rrhhcontent %}
+<div id="{{ table.unique_id }}">
+  <h2 class="h3 pt-2 mb-0">{{ table.title }}</h2>
+  <form hx-get="{{ request.path_info }}"
+        hx-swap="innerHTML" hx-target="#{{ table.unique_id }}"
+    class="form" style="margin-bottom: 10px; margin-top:7px">
+      {% if filter %}
+          {% for key, value in request.GET.items %}
+              {% if key not in filter.form.fields %}
+                  <input type="hidden" name="{{ key }}" value="{{ value }}">
+              {% endif %}
+          {% endfor %}
+          {% crispy filter.form %}
+          {% include "django_tables2/django_tables_filter_line.html" %}
+      {% endif %}
+  </form>
+{% if table.url_action_method %}
+  <form hx-post="{% url table.url_action_method %}"
+        hx-swap="innerHTML" hx-target="#{{ table.unique_id }}" >
+        {% csrf_token %}
+        {% if show_bulk_actions and table.available_actions %}
+        <div class="bulk-actions">
+          {% for action_id, action_name, action_show_on_bulk, action_show_confirm in table.available_actions %}
+          {% if forloop.first %}
+          <label for="action">Acción sobre seleccionados:</label>
+          <select name="action" id="action" class="select form-select" style="display:inline!important;width:200px;">
+            {% endif %}
+            {% if action_show_on_bulk %}
+            <option value="{{ action_id }}"
+                    {% if action_show_confirm %}
+                    data-confirm="true"
+                    {% endif %}>
+            {{ action_name|safe }}
+            {% endif %}
+            {% if forloop.last %}
+          </select>
+          <button class="btn btn-primary" type="submit"><i class="bi bi-gear"></i> Ejecutar</button>
+          {% endif %}
+          {% endfor %}
+
+      {% if table.page.number %}
+      {% with request.GET.urlencode as query_string %}
+      {% if query_string %}
+      <input type="hidden" name="filter_query_string" value="{{ query_string }}">
+      {% endif %}
+      {% endwith %}
+      {% endif %}
+    </div>
+    {% endif %}
+
+{% endif %}
+{% render_table table 'django_tables2/rioja_table_template.html' %}
+{% if table.url_action_method %}
+</form>
+
+{% endif %}
+
+{% if table.show_boton_nuevo %}
+</br>
+    <div class="row justify-content-right">
+        <div class="col-12 text-end">
+            <a href="{% url table.create_url %}" class="btn btn-primary">
+                Nuevo <i class="bi bi-plus"></i>
+            </a>
+        </div>
+    </div>
+{% endif %}
+
+<script>
+    function toggleAll(source, event) {
+        // Prevent interference from other event listeners
+        if (event) {
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+        }
+
+        // Select all checkboxes with 'row-checkbox' class
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+
+        // Determine the target state based on current row checkboxes
+        // If any checkbox is unchecked, we want to check all
+        // If all checkboxes are checked, we want to uncheck all
+        const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+        const isChecked = checkedCount < checkboxes.length;
+
+        // Set the header checkbox state
+        source.checked = isChecked;
+        if (isChecked) {
+            source.setAttribute('checked', 'checked');
+        } else {
+            source.removeAttribute('checked');
+        }
+
+        // Toggle all row checkboxes
+        checkboxes.forEach(function(checkbox) {
+            if (checkbox !== source) {
+                checkbox.checked = isChecked;
+
+                // Ensure attribute is synchronized with property
+                if (isChecked) {
+                    checkbox.setAttribute('checked', 'checked');
+                } else {
+                    checkbox.removeAttribute('checked');
+                }
+
+                // Trigger change event for any listeners
+                checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+    }
+
+</script>
+{% endblock rrhhcontent %}
+</div>

@@ -1,0 +1,8 @@
+{% load sluguer %}
+<div
+  id="table-content{{data_url|to_slug}}"
+  hx-get="{% url 'list-view-'|add:data_url %}{{ queryparams }}"
+  hx-trigger="load"
+  hx-swap="outerHTML">
+    <!-- Este div será cargado dinámicamente por htmx -->
+</div>
