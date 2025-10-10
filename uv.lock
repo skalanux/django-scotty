@@ -1,0 +1,122 @@
+version = 1
+revision = 3
+requires-python = ">=3.12"
+
+[[package]]
+name = "asgiref"
+version = "3.10.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/46/08/4dfec9b90758a59acc6be32ac82e98d1fbfc321cb5cfa410436dbacf821c/asgiref-3.10.0.tar.gz", hash = "sha256:d89f2d8cd8b56dada7d52fa7dc8075baa08fb836560710d38c292a7a3f78c04e", size = 37483, upload-time = "2025-10-05T09:15:06.557Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/17/9c/fc2331f538fbf7eedba64b2052e99ccf9ba9d6888e2f41441ee28847004b/asgiref-3.10.0-py3-none-any.whl", hash = "sha256:aef8a81283a34d0ab31630c9b7dfe70c812c95eba78171367ca8745e88124734", size = 24050, upload-time = "2025-10-05T09:15:05.11Z" },
+]
+
+[[package]]
+name = "django"
+version = "5.2.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "asgiref" },
+    { name = "sqlparse" },
+    { name = "tzdata", marker = "sys_platform == 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b1/96/bd84e2bb997994de8bcda47ae4560991084e86536541d7214393880f01a8/django-5.2.7.tar.gz", hash = "sha256:e0f6f12e2551b1716a95a63a1366ca91bbcd7be059862c1b18f989b1da356cdd", size = 10865812, upload-time = "2025-10-01T14:22:12.081Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8f/ef/81f3372b5dd35d8d354321155d1a38894b2b766f576d0abffac4d8ae78d9/django-5.2.7-py3-none-any.whl", hash = "sha256:59a13a6515f787dec9d97a0438cd2efac78c8aca1c80025244b0fe507fe0754b", size = 8307145, upload-time = "2025-10-01T14:22:49.476Z" },
+]
+
+[[package]]
+name = "django-cotton"
+version = "2.1.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c3/99/36e318ebd1ace3fc874541a02e7e4149def8e21aab85aceb7bb01e17607b/django_cotton-2.1.3.tar.gz", hash = "sha256:737f9c088549d7febbf78532856ddf1270799675a4bc9fa191a5db0e195a9c13", size = 23432, upload-time = "2025-06-30T17:31:29.29Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ad/ec/5e5318af0304962be43e3b912aef024d8ac08c0f9a9dfcc4f0cd55d0e74e/django_cotton-2.1.3-py3-none-any.whl", hash = "sha256:f33658d05a8f5ecf7448bdf1089e2ad27d2ce42e59c752216129701d7d153c89", size = 22214, upload-time = "2025-06-30T17:31:28.093Z" },
+]
+
+[[package]]
+name = "django-crispy-forms"
+version = "2.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/88/a1/ffd7b0e160296121d88e3e173165370000ee4de7328f5c4f4b266638dcd9/django_crispy_forms-2.4.tar.gz", hash = "sha256:915e1ffdeb2987d78b33fabfeff8e5203c8776aa910a3a659a2c514ca125f3bd", size = 278932, upload-time = "2025-04-13T07:25:00.176Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1d/ec/a25f81e56a674e63cf6c3dd8e36b1b3fecc238fecd6098504adc0cc61402/django_crispy_forms-2.4-py3-none-any.whl", hash = "sha256:5a4b99876cfb1bdd3e47727731b6d4197c51c0da502befbfbec6a93010b02030", size = 31446, upload-time = "2025-04-13T07:24:58.516Z" },
+]
+
+[[package]]
+name = "django-filter"
+version = "25.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2c/e4/465d2699cd388c0005fb8d6ae6709f239917c6d8790ac35719676fffdcf3/django_filter-25.2.tar.gz", hash = "sha256:760e984a931f4468d096f5541787efb8998c61217b73006163bf2f9523fe8f23", size = 143818, upload-time = "2025-10-05T09:51:31.521Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c1/40/6a02495c5658beb1f31eb09952d8aa12ef3c2a66342331ce3a35f7132439/django_filter-25.2-py3-none-any.whl", hash = "sha256:9c0f8609057309bba611062fe1b720b4a873652541192d232dd28970383633e3", size = 94145, upload-time = "2025-10-05T09:51:29.728Z" },
+]
+
+[[package]]
+name = "django-scotty"
+version = "0.1.1"
+source = { editable = "." }
+dependencies = [
+    { name = "django-cotton" },
+    { name = "django-crispy-forms" },
+    { name = "django-filter" },
+    { name = "django-tables2" },
+    { name = "tablib" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "django-cotton", specifier = ">=2.1.3" },
+    { name = "django-crispy-forms", specifier = ">=2.4" },
+    { name = "django-filter", specifier = ">=25.2" },
+    { name = "django-tables2", specifier = ">=2.7.5" },
+    { name = "tablib", specifier = ">=3.8.0" },
+]
+
+[[package]]
+name = "django-tables2"
+version = "2.7.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/19/0f/497ebb829a0f6d93ac8ae720b114a413e6e3a6eb0682f15c7a8d59f69464/django_tables2-2.7.5.tar.gz", hash = "sha256:fb5dcaa09379cf3947598ec7e1bd5f26ed63aafdee3b23963446763bbeac37bf", size = 128618, upload-time = "2025-01-02T07:49:42.674Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0b/66/6d454db3edcd285b767caaa790c3e7a3969c91bb6f93601d9a879aab06f2/django_tables2-2.7.5-py3-none-any.whl", hash = "sha256:d9338937797207ffb6f481be2125c5ec3a0bb1858d409c672cc25fc5d654cb22", size = 95984, upload-time = "2025-01-02T07:49:39.752Z" },
+]
+
+[[package]]
+name = "sqlparse"
+version = "0.5.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e5/40/edede8dd6977b0d3da179a342c198ed100dd2aba4be081861ee5911e4da4/sqlparse-0.5.3.tar.gz", hash = "sha256:09f67787f56a0b16ecdbde1bfc7f5d9c3371ca683cfeaa8e6ff60b4807ec9272", size = 84999, upload-time = "2024-12-10T12:05:30.728Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a9/5c/bfd6bd0bf979426d405cc6e71eceb8701b148b16c21d2dc3c261efc61c7b/sqlparse-0.5.3-py3-none-any.whl", hash = "sha256:cf2196ed3418f3ba5de6af7e82c694a9fbdbfecccdfc72e281548517081f16ca", size = 44415, upload-time = "2024-12-10T12:05:27.824Z" },
+]
+
+[[package]]
+name = "tablib"
+version = "3.8.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/09/cc/fe19d9c2ac1088794a51fc72f49b7226f88a0361f924fb3d17a9ec80e657/tablib-3.8.0.tar.gz", hash = "sha256:94d8bcdc65a715a0024a6d5b701a5f31e45bd159269e62c73731de79f048db2b", size = 122247, upload-time = "2025-01-22T15:29:27.276Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5c/95/6542f54ebd90539b12ed6189cb54a6550a28407b1c503c2e55190c29a4c9/tablib-3.8.0-py3-none-any.whl", hash = "sha256:35bdb9d4ec7052232f8803908f9c7a9c3c65807188b70618fa7a7d8ccd560b4d", size = 47935, upload-time = "2025-01-22T15:28:44.499Z" },
+]
+
+[[package]]
+name = "tzdata"
+version = "2025.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/95/32/1a225d6164441be760d75c2c42e2780dc0873fe382da3e98a2e1e48361e5/tzdata-2025.2.tar.gz", hash = "sha256:b60a638fcc0daffadf82fe0f57e53d06bdec2f36c4df66280ae79bce6bd6f2b9", size = 196380, upload-time = "2025-03-23T13:54:43.652Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5c/23/c7abc0ca0a1526a0774eca151daeb8de62ec457e77262b66b359c3c7679e/tzdata-2025.2-py2.py3-none-any.whl", hash = "sha256:1a403fada01ff9221ca8044d701868fa132215d84beb92242d9acd2147f667a8", size = 347839, upload-time = "2025-03-23T13:54:41.845Z" },
+]
