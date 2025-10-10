@@ -1,8 +1,8 @@
-{% extends request.htmx|yesno:"dummy.html,rrhh/baseHR.html" %}
+{% extends request.htmx|yesno:"django_scotty/dummy.html,django_scotty/base.html" %}
 {% load django_tables2 %}
 {% load crispy_forms_tags %}
 
-{% block rrhhcontent %}
+{% block scotty_content %}
 <div id="{{ table.unique_id }}">
   <h2 class="h3 pt-2 mb-0">{{ table.title }}</h2>
   <form hx-get="{{ request.path_info }}"
@@ -114,5 +114,5 @@
     }
 
 </script>
-{% endblock rrhhcontent %}
+{% endblock scotty_content %}
 </div>

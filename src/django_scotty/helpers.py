@@ -510,19 +510,19 @@ def add_urls(views_modules: List) -> List:
     return urlpatterns
 
 
-def load_scotty_urls():
+def load_scotty_urls(app_name=None):
     """
     Auto-detecta la app actual basándose en el módulo que lo llama.
     Busca dentro de <app>/scotty/ todos los módulos .py y les aplica add_urls().
     Devuelve un unico urlpatterns combinando todo.
     """
-    # --- 1. Detectar desde dónde fue llamada la función ---
-    caller_frame = inspect.stack()[1]
-    caller_module = inspect.getmodule(caller_frame[0])
-    caller_module_name = caller_module.__name__  # ejemplo: "mi_app.urls"
-
-    # Derivar el nombre de la app -> "mi_app"
-    app_name = caller_module_name.split(".")[0]
+    if app_name is None:
+        # --- 1. Detectar desde dónde fue llamada la función ---
+        caller_frame = inspect.stack()[1]
+        caller_module = inspect.getmodule(caller_frame[0])
+        caller_module_name = caller_module.__name__  # ejemplo: "mi_app.urls"
+        # Derivar el nombre de la app -> "mi_app"
+        app_name = caller_module_name.split(".")[0]
 
     # --- 2. Obtener ruta del paquete de la app ---
     app_module = importlib.import_module(app_name)
