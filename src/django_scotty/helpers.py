@@ -1,10 +1,14 @@
+import importlib
 import inspect
+import logging
+import os
+import pkgutil
 import re
 import uuid
+
 from typing import List
 from urllib.parse import parse_qs
 
-import django_tables2 as tables
 from crispy_forms.helper import FormHelper
 from django.core.paginator import EmptyPage, Paginator
 from django.db.models import QuerySet
@@ -16,12 +20,7 @@ from django.views.generic import DetailView
 from django_filters.views import FilterView
 from django_tables2.export.views import ExportMixin
 from django_tables2.views import SingleTableMixin, SingleTableView
-
-import importlib
-import os
-import pkgutil
-import inspect
-from django.urls import path
+import django_tables2 as tables
 
 
 class ActionTable(tables.Table):
@@ -544,8 +543,10 @@ def load_scotty_urls(app_name=None):
             try:
                 module = importlib.import_module(full_module_path)
                 modules_list.append(module)
-            except Exception:
-                print(f"[SCOTTY LOADER] Error importando {full_module_path}")
+            except Exception as err:
+                logging.error(
+                    f"[SCOTTY LOADER] Error importando {full_module_path} {err}"
+                )
             collected_urls = add_urls(modules_list)
 
     return collected_urls
