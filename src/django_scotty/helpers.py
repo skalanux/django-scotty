@@ -792,17 +792,25 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
 
                 # TODO: Test if
                 try:
-                    condition_result = action_method.condition(obj, self.request)
+                    if getattr(action_method, "condition", None):
+                        condition_result = action_method.condition(obj, self.request)
+                    else:
+                        condition_result = True
                     if condition_result:
                         result = getattr(self, action)(obj)
                         results.append(result)
                     else:
                         # Fixme: Add messages
                         # messages.warning(request, 'Could not perform the action')
-                        pass
+                        logging.info(
+                        f"Could not met"
+                        )
+
                 except Exception:
                     # DO NOT run the action again on error
-                    pass
+                    logging.error(
+                    f"Could not perform the action: {err}"
+                    )
 
             # FIXME: Improve this logic. Currently if an action returns
             # a redirect, subsequent bulk calls won't execute. Since there
