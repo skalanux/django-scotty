@@ -757,14 +757,17 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
     # via a flag.
     def post(self, request, *args, **kwargs):
         """Handle POST operations on selected items."""
-
         # The list of checked checkbox IDs, or if a single pk is passed
         if (pk := request.GET.get("pk")) is not None:
+            # Es una solicitud individual
             action = request.GET.get("action")
             selected_pks = [pk]
+            is_bulk=False
         else:
+            # Viene de bulk
             action = request.POST.get("action")
             selected_pks = request.POST.getlist("seleccionar")
+            is_bulk=True
 
         queryset_to_act_on: QuerySet = None
 
@@ -813,17 +816,19 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
                     f"Could not perform the action: {err}"
                     )
 
-            # FIXME: Improve this logic. Currently if an action returns
-            # a redirect, subsequent bulk calls won't execute. Since there
-            # is no clear criteria, the first redirect wins.
             if len(results) == 1:
                 if hasattr(results[0], "status_code"):
                     return results[0]
             elif len(results) > 1:
                 if all(hasattr(result, "status_code") for result in results):
                     return results[0]
+            #
             # TODO: Test si tiene metodo de finalizacion lo ejecuta
-            if len(results)>=1:
+            # cambiar el results > 1 en realidad lo que tiene que revisar es 
+            # que sea del tipo bulk. ya que un bulk puede mandar un solo objeto si 
+            # seleccioné uno solo
+            #
+            if is_bulk and len(results)>=1:
                 finally_method = getattr(self, f'finally_{action}',None)
                 if finally_method:
                     return finally_method(results)
