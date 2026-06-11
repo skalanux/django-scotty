@@ -481,7 +481,7 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
             kwargs["available_actions"] = []
         else:
             available_actions = list(self.available_actions)
-            kwargs["available_actions"] = available_actions
+            kwargs["available_actions"] = [k for k in available_actions if k[3]]
 
         kwargs["post_paginate_hook"] = self.post_paginate_hook
 
@@ -743,11 +743,12 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
                     action_method = getattr(self, action)
                     verbose_name = getattr(action_method, "verbose_name", None)
                     show_on_bulk = getattr(action_method, "show_on_bulk", True)
+                    show_on_row = getattr(action_method, "show_on_row", True)
                     show_confirm = getattr(action_method, "show_on_bulk", False)
                     if verbose_name is None:
                         verbose_name = action.replace("_", " ").capitalize()
 
-                    yield action, verbose_name, show_on_bulk, show_confirm
+                    yield action, verbose_name, show_on_bulk, show_on_row, show_confirm
         else:
             return []
 
@@ -821,6 +822,11 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
             elif len(results) > 1:
                 if all(hasattr(result, "status_code") for result in results):
                     return results[0]
+            # TODO: Test si tiene metodo de finalizacion lo ejecuta
+            if len(results)>=1:
+                finally_method = getattr(self, f'finally_{action}',None)
+                if finally_method:
+                    return finally_method(results)
         return redirect(request.path)
 
     # TODO: Test
