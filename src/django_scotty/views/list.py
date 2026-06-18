@@ -1,9 +1,12 @@
 import logging
 import re
+from collections.abc import Generator
+from typing import Any
 from urllib.parse import parse_qs, urlencode
 
 from crispy_forms.helper import FormHelper
 from django.db.models import QuerySet
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.urls import NoReverseMatch, reverse
 from django_filters.views import FilterView
@@ -31,26 +34,26 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
     template_name = "django_tables2/base_django_tables2.html"
     formhelper_class = FormHelper
     paginate_by = 10
-    available_action_names = None
+    available_action_names: list[str] | None = None
     show_boton_nuevo = False
     usar_modal = False
-    create_url = None
-    createview_class = None
-    updateview_class = None
-    deleteview_class = None
-    post_paginate_hook = None
-    pre_render_hook = None
+    create_url: str | None = None
+    createview_class: type | None = None
+    updateview_class: type | None = None
+    deleteview_class: type | None = None
+    post_paginate_hook: Any = None
+    pre_render_hook: Any = None
     title = "Listado"
-    subtitle = None
-    table_empty_text = None
+    subtitle: str | None = None
+    table_empty_text: str | None = None
     show_bulk_actions = True
-    available_filter_buttons = [
+    available_filter_buttons: list[str] | None = [
         "filtrar",
         "exportar_xls",
     ]
-    extra_links_actions = []
+    extra_links_actions: list[Any] = []
 
-    def get_table_kwargs(self):
+    def get_table_kwargs(self) -> dict[str, Any]:
         kwargs = super().get_table_kwargs()
         view_only = self.request.GET.get("view_only", False) == "true"
 
@@ -64,7 +67,7 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
 
         return kwargs
 
-    def get_table(self, **kwargs):
+    def get_table(self, **kwargs: Any) -> Any:
         table = super().get_table(**kwargs)
         table.view = self
 
@@ -72,9 +75,9 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
             self.pre_render_hook(table)
         return table
 
-    def get_filterset(self, filterset_class):
+    def get_filterset(self, filterset_class: type) -> Any:
         kwargs = self.get_filterset_kwargs(filterset_class)
-        true_filters = {}
+        true_filters: dict[str, Any] = {}
         if kwargs["data"]:
             for key, value in kwargs["data"].items():
                 true_filters[key] = value
@@ -83,7 +86,7 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
         filterset.form.helper = self.formhelper_class()
         return filterset
 
-    def _check_user_perms(self, method):
+    def _check_user_perms(self, method: Any) -> bool:
         perm_required = getattr(method, "allowed_permission", None)
         if perm_required is None:
             return True
@@ -94,11 +97,11 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
 
         return user.has_perm(perm_required)
 
-    def _get_link_method(self, name):
+    def _get_link_method(self, name: str) -> Any:
         return getattr(self, name, None)
 
-    def _resolve_link_params(self, name, method):
-        params = {}
+    def _resolve_link_params(self, name: str, method: Any) -> dict[str, Any]:
+        params: dict[str, Any] = {}
 
         pk_attr = getattr(method, "pk", None)
         if pk_attr is not None:
@@ -117,7 +120,8 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
 
         if return_dict and had_attr_params:
             logger.warning(
-                "%s: method return overrides pk/params attributes", name,
+                "%s: method return overrides pk/params attributes",
+                name,
             )
 
         if return_dict:
@@ -125,8 +129,8 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
 
         return params
 
-    def _get_processed_links(self):
-        processed_links = []
+    def _get_processed_links(self) -> list[dict[str, Any]]:
+        processed_links: list[dict[str, Any]] = []
 
         for name in self.extra_links_actions:
             method = self._get_link_method(name)
@@ -159,17 +163,19 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
             variant = getattr(method, "variant", VARIANT_PRIMARY)
             style = getattr(method, "style", STYLE_SOLID)
 
-            processed_links.append({
-                "label": verbose_name,
-                "url": full_url,
-                "btn_class": get_button_class(variant, style),
-                "order": getattr(method, "order", 0),
-            })
+            processed_links.append(
+                {
+                    "label": verbose_name,
+                    "url": full_url,
+                    "btn_class": get_button_class(variant, style),
+                    "order": getattr(method, "order", 0),
+                }
+            )
 
         processed_links.sort(key=lambda x: x.get("order", 0), reverse=True)
         return processed_links
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
 
         orig_table = context["table"]
@@ -227,7 +233,7 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
         ):
             context["show_action_buttons"] = self.available_filter_buttons
         else:
-            buttons = []
+            buttons: list[str] = []
             if hasattr(self, "show_filter_line") and self.show_filter_line:
                 buttons.extend(["filtrar", "limpiar"])
             if hasattr(self, "show_export_xls") and self.show_export_xls:
@@ -241,14 +247,14 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
 
         return context
 
-    def get_export_filename(self, export_format):
+    def get_export_filename(self, export_format: str) -> str:
         class_name = self.__class__.__name__.replace("View", "")
         filename = re.sub(r"[^\w\s-]", "", class_name.lower())
         filename = re.sub(r"[-\s]+", "_", filename)
         return f"{filename}.{export_format}"
 
     @property
-    def available_actions(self):
+    def available_actions(self) -> Generator | list:  # type: ignore[override]
         if self.available_action_names is not None:
             for action in self.available_action_names:
                 if hasattr(self, action):
@@ -264,7 +270,7 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
         else:
             return []
 
-    def post(self, request, *_args, **_kwargs):
+    def post(self, request: HttpRequest, *_args: Any, **_kwargs: Any) -> HttpResponse:
         if (pk := request.GET.get("pk")) is not None:
             action = request.GET.get("action")
             selected_pks = [pk]
@@ -274,7 +280,7 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
             selected_pks = request.POST.getlist("seleccionar")
             is_bulk = True
 
-        queryset_to_act_on: QuerySet = None
+        queryset_to_act_on: QuerySet | None = None
 
         if selected_pks:
             queryset_to_act_on = self.model.objects.filter(pk__in=selected_pks)
@@ -289,7 +295,7 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
             queryset_to_act_on = filterset.qs
 
         if queryset_to_act_on is not None:
-            results = []
+            results: list[Any] = []
             for obj in queryset_to_act_on:
                 action_method = getattr(self, action)
 
@@ -305,16 +311,10 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
                         logging.info("Could not met")
 
                 except Exception as e:
-                    logging.exception(
-                        "Could not perform action on %s: %s", obj, e
-                    )
+                    logging.exception("Could not perform action on %s: %s", obj, e)
 
-            if (
-                len(results) == 1
-                and hasattr(results[0], "status_code")
-            ) or (
-                len(results) > 1
-                and all(hasattr(r, "status_code") for r in results)
+            if (len(results) == 1 and hasattr(results[0], "status_code")) or (
+                len(results) > 1 and all(hasattr(r, "status_code") for r in results)
             ):
                 return results[0]
 
@@ -325,7 +325,7 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
         return redirect(request.path)
 
     @classmethod
-    def get_slugname(cls):
+    def get_slugname(cls) -> str:
         trimed_view_name = cls.__name__.lower().removesuffix("view")
         return trimed_view_name
 
@@ -336,11 +336,11 @@ class DictTableView(ExportMixin, SingleTableView):
     show_filter_line = False
 
     @classmethod
-    def get_slugname(cls):
+    def get_slugname(cls) -> str:
         trimed_view_name = cls.__name__.lower().removesuffix("view")
         return trimed_view_name
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         context["show_export_xls"] = self.show_export_xls
         context["show_filter_line"] = self.show_filter_line

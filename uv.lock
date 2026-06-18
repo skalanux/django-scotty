@@ -158,6 +158,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-django" },
     { name = "ruff" },
+    { name = "types-django-filter" },
 ]
 
 [package.metadata]
@@ -183,6 +184,7 @@ dev = [
     { name = "pytest", specifier = ">=9.1.0" },
     { name = "pytest-django", specifier = ">=4.12.0" },
     { name = "ruff", specifier = ">=0.15.17" },
+    { name = "types-django-filter", specifier = ">=25.2.0.20260508" },
 ]
 
 [[package]]
@@ -502,6 +504,18 @@ wheels = [
 [package.optional-dependencies]
 xlsx = [
     { name = "openpyxl" },
+]
+
+[[package]]
+name = "types-django-filter"
+version = "25.2.0.20260508"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django-stubs" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/46/ec/ca3494b2bcda8f16ceae401fd784e47d7ad68b7f6eb64a67a9e284d4af9b/types_django_filter-25.2.0.20260508.tar.gz", hash = "sha256:7798d6bf8c953d888cb846c5041ffa012f770bb335e6ddb3ac76d1fc01e03a20", size = 15868, upload-time = "2026-05-08T04:52:09.333Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9c/1d/be62b89749e3e399875f84683774eb21eb932c67178878df7b47b19ea832/types_django_filter-25.2.0.20260508-py3-none-any.whl", hash = "sha256:8f76ec516a10b8e8d2d363015b95a474899001664718b6ebf51c929f3514016e", size = 19330, upload-time = "2026-05-08T04:52:08.458Z" },
 ]
 
 [[package]]

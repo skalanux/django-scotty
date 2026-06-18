@@ -1,6 +1,4 @@
-import pytest
-from django.http import HttpRequest
-from django.test import RequestFactory, override_settings
+from django.test import RequestFactory
 
 from tests.models import DummyItem
 
@@ -12,6 +10,7 @@ class SampleFilterSet:
 
     def __init__(self, *args, **kwargs):
         from django_filters import FilterSet
+
         self._filterset = FilterSet(*args, **kwargs)
 
     def __getattr__(self, name):

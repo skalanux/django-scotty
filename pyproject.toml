@@ -1,6 +1,6 @@
 [project]
 name = "django-scotty"
-version = "0.3.2"
+version = "0.4.0"
 description = "Advanced tables for django cruds"
 readme = "README.md"
 authors = [
@@ -54,11 +54,28 @@ omit = ["*/tests/*"]
 python_version = "3.12"
 strict = true
 warn_unused_ignores = true
-plugins = ["mypy_django_plugin.plugin"]
+plugins = ["mypy_django_plugin.main"]
 
 [[tool.mypy.overrides]]
 module = "tests.*"
 disallow_untyped_defs = false
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "django_scotty.views.*"
+disallow_untyped_defs = false
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "django_scotty.table"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "django_scotty.form_helpers"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "django_scotty.urls"
 ignore_errors = true
 
 [tool.django-stubs]
@@ -72,4 +89,5 @@ dev = [
     "pytest>=9.1.0",
     "pytest-django>=4.12.0",
     "ruff>=0.15.17",
+    "types-django-filter>=25.2.0.20260508",
 ]

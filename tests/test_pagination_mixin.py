@@ -12,15 +12,19 @@ class TestPaginationFixMixin:
         parents = (PaginationFixMixin,)
 
         if parent_get_raises == "empty_page":
+
             class _Parent:
-                def get(self, request, *args, **kwargs):
+                def get(self, *_args: object, **_kwargs: object) -> None:  # noqa: ARG002
                     raise EmptyPage
+
             parents = (PaginationFixMixin, _Parent)
 
         elif parent_get_raises == "http404":
+
             class _Parent:
-                def get(self, request, *args, **kwargs):
+                def get(self, *_args: object, **_kwargs: object) -> None:  # noqa: ARG002
                     raise Http404
+
             parents = (PaginationFixMixin, _Parent)
 
         cls = type("TestView", parents, {})

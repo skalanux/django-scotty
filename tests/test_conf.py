@@ -75,7 +75,8 @@ def test_get_button_class_unknown_variant():
 
 
 def test_button_variant_defaults_keys():
-    for variant in ("primary", "secondary", "success", "danger", "warning", "info", "light", "dark"):
+    variants = sorted(BUTTON_VARIANT_DEFAULTS)
+    for variant in variants:
         assert variant in BUTTON_VARIANT_DEFAULTS
         entry = BUTTON_VARIANT_DEFAULTS[variant]
         assert "outline" in entry
@@ -84,18 +85,22 @@ def test_button_variant_defaults_keys():
         assert entry["outline"].startswith("btn-outline-")
 
 
-@override_settings(SCOTTY_CONFIG={
-    "buttons_variants": {"primary": "my-custom-btn"},
-})
+@override_settings(
+    SCOTTY_CONFIG={
+        "buttons_variants": {"primary": "my-custom-btn"},
+    }
+)
 def test_get_button_class_config_override_flat():
     assert get_button_class("primary") == "my-custom-btn"
 
 
-@override_settings(SCOTTY_CONFIG={
-    "buttons_variants": {
-        "primary": {"solid": "my-btn-primary", "outline": "my-btn-outline-primary"},
-    },
-})
+@override_settings(
+    SCOTTY_CONFIG={
+        "buttons_variants": {
+            "primary": {"solid": "my-btn-primary", "outline": "my-btn-outline-primary"},
+        },
+    }
+)
 def test_get_button_class_config_override_dict():
     assert get_button_class("primary", "solid") == "my-btn-primary"
     assert get_button_class("primary", "outline") == "my-btn-outline-primary"

@@ -1,4 +1,4 @@
-from django.template import Template, Context
+from django.template import Context, Template
 
 
 def test_to_slug_filter():

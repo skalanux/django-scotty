@@ -1,6 +1,6 @@
 from django_scotty.views.create import GenericCreateView
-from django_scotty.views.update import GenericUpdateView
 from django_scotty.views.delete import GenericDeleteView
+from django_scotty.views.update import GenericUpdateView
 
 
 class TestGenericCreateViewSlugname:

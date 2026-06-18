@@ -1,15 +1,17 @@
+from typing import Any
+
 from django.views.generic import DetailView
 
 
 class GenericDetailView(DetailView):
     template_name = "django_tables2/generic_detail.html"
-    exclude_fields = ["id"]
+    exclude_fields: list[str] = ["id"]
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         instance = context["object"]
 
-        field_list = []
+        field_list: list[dict[str, Any]] = []
         for field in instance._meta.get_fields():
             if not field.concrete or field.many_to_many:
                 continue
@@ -51,6 +53,6 @@ class GenericDetailView(DetailView):
         return context
 
     @classmethod
-    def get_slugname(cls):
+    def get_slugname(cls) -> str:
         trimed_view_name = cls.__name__.lower().removesuffix("detailview")
         return trimed_view_name

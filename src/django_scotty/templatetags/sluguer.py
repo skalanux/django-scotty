@@ -5,7 +5,7 @@ register = template.Library()
 
 
 @register.filter
-def to_slug(value):
+def to_slug(value: str) -> str:
     """
     Convert a string into a slug.
     """

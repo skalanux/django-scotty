@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 import django_tables2 as tables
 from django.urls import reverse
@@ -8,24 +9,41 @@ from django_scotty.constants import BTN_DANGER, BTN_PRIMARY, BTN_WARNING
 
 logger = logging.getLogger(__name__)
 
-
 __all__ = [
     "ActionTable",
 ]
 
 
 class ActionTable(tables.Table):
-    def __init__(self, *args, **kwargs):
+    """Extends django-tables2 Table with an acciones column and action buttons."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         self.action_columns = kwargs.pop("available_actions", [])
         self.post_paginate_hook = kwargs.pop("post_paginate_hook", None)
         super().__init__(*args, **kwargs)
 
     acciones = tables.Column(verbose_name="Acciones", orderable=False, empty_values=())
 
-    def get_ver_link(self, url):
+    # Attributes set dynamically at runtime by the view
+    view: Any = None
+    updateview_class: Any = None
+    update_url_name: str | None = None
+    deleteview_class: Any = None
+    delete_url_name: str | None = None
+    usar_modal: bool = False
+    unique_id: str = ""
+    url_action_method: str | None = None
+    title: str = ""
+    subtitle: str | None = None
+    view_only: bool = False
+    show_boton_nuevo: bool = False
+    create_url: str | None = None
+    empty_text: str = ""
+
+    def get_ver_link(self, url: str) -> SafeText:
         return SafeText(f'<a href="{url}" class="btn boton-ver"></a>')
 
-    def render_acciones(self, record):
+    def render_acciones(self, record: Any) -> SafeText:  # type: ignore[override]
         rendered_edit = SafeText("")
         if getattr(self, "updateview_class", None) is not None:
             try:
@@ -71,14 +89,13 @@ class ActionTable(tables.Table):
         if getattr(self, "url_action_method", None) is None:
             return rendered_edit + rendered_delete
 
-        rendered_actions = SafeText("")
         url = reverse(self.url_action_method)
         if len(self.action_columns) == 1:
             accion = self.action_columns[0]
             accion_method = getattr(self.view, accion[0])
 
             try:
-                condition_result = accion_method.condition(record, self.request)
+                condition_result = accion_method.condition(record, self.view.request)
                 if not condition_result:
                     return rendered_edit + rendered_delete
             except Exception:
@@ -107,7 +124,9 @@ class ActionTable(tables.Table):
                 accion_method = getattr(self.view, accion[0])
 
                 try:
-                    condition_result = accion_method.condition(record, self.request)
+                    condition_result = accion_method.condition(
+                        record, self.view.request
+                    )
                     if not condition_result:
                         continue
                 except Exception:
@@ -147,7 +166,7 @@ class ActionTable(tables.Table):
         else:
             return rendered_edit + rendered_delete
 
-    def paginate(self, *args, **kwargs):
+    def paginate(self, *args: Any, **kwargs: Any) -> None:
         super().paginate(*args, **kwargs)
         if self.page and self.post_paginate_hook:
             self.post_paginate_hook(self.page.object_list)
