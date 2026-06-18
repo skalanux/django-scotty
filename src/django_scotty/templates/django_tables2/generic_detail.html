@@ -1,6 +1,5 @@
-{% extends request.htmx|yesno:"dummy.html,rrhh/baseHR.html" %}
-{
-{% block rrhhcontent %}
+{% extends request.htmx|yesno:"django_scotty/dummy.html,django_scotty/base.html" %}
+{% block scotty_content %}
 <div class="container mt-4">
   <h2 class="h3 pt-2 mb-0">{{ title|default:"Detalle del Registro" }}</h2>
   <br/>
@@ -32,4 +31,4 @@
         </div>
     </div>
 </div>
-{% endblock rrhhcontent %}
+{% endblock scotty_content %}
