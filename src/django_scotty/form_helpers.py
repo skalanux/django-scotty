@@ -6,7 +6,10 @@ class CloseButton(HTML):
     def render(self, form, context, **kwargs):
         usar_modal = getattr(form.helper, '_usar_modal', False)
         if usar_modal:
-            html = '<button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cerrar</button>'
+            html = (
+                '<button type="button" class="btn btn-outline-primary"'
+                ' data-bs-dismiss="modal">Cerrar</button>'
+            )
         else:
             back_url = getattr(form.helper, 'back_url', '#')
             html = f'<a href="{back_url}" class="btn btn-outline-primary">Volver</a>'

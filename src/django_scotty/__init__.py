@@ -6,6 +6,6 @@ A Django app that provides enhanced table views with filters, exports, and actio
 using django-tables2, django-filters, and django-cotton.
 """
 
-__version__ = '0.1.0'
+__version__ = '0.3.2'
 
 default_app_config = 'django_scotty.apps.DjangoScottyConfig'
