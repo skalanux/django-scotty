@@ -9,6 +9,7 @@ class DummyItem(models.Model):
 
     class Meta:
         app_label = "tests"
+        ordering = ["pk"]
 
     def __str__(self):
         return self.name
