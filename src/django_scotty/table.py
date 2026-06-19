@@ -203,6 +203,9 @@ class ActionTable(tables.Table):
                     </li>"""
                 rendered_actions += SafeText(action_html)
 
+            if not rendered_actions:
+                return rendered_edit + rendered_delete
+
             return (
                 rendered_edit
                 + rendered_delete

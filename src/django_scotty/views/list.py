@@ -452,7 +452,6 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
             results: list[Any] = []
             for obj in queryset_to_act_on:
                 action_method = getattr(self, action)
-
                 try:
                     if getattr(action_method, "condition", None):
                         condition_result = action_method.condition(obj, self.request)
