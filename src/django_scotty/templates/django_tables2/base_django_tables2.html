@@ -39,7 +39,7 @@
     </form>
 {% if table.url_action_method %}
     <form hx-post="{% url table.url_action_method %}"
-        hx-swap="innerHTML" hx-target="#{{ table.unique_id }}" 
+        hx-swap="innerHTML" hx-target="#{{ table.unique_id }}"
     >
         {% csrf_token %}
         {% if show_bulk_actions and table.available_actions %}
