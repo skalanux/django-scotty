@@ -1,13 +1,39 @@
+"""Detail-related generic views for the django-scotty framework."""
+
 from typing import Any
 
 from django.views.generic import DetailView
 
 
 class GenericDetailView(DetailView):
+    """Detail view that renders model fields as a labelled list.
+
+    Iterates over the model's concrete (non-M2M) fields, resolves
+    display methods and boolean labels, and passes the resulting
+    field list to the template.
+
+    Attributes:
+        model: The Django model whose instance is displayed.
+        template_name: Path to the detail template.
+        exclude_fields: Field names to skip when rendering the list.
+    """
+
     template_name = "django_tables2/generic_detail.html"
     exclude_fields: list[str] = ["id"]
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a labelled field list from the model's concrete fields.
+
+        Iterates over all concrete (non-M2M) fields, skips those listed
+        in ``exclude_fields``, resolves ``get_*_display`` methods, and
+        converts boolean values to Spanish labels.
+
+        Args:
+            **kwargs: Keyword arguments passed to the parent context.
+
+        Returns:
+            The enriched context with ``field_list`` and ``title``.
+        """
         context = super().get_context_data(**kwargs)
         instance = context["object"]
 
@@ -54,5 +80,12 @@ class GenericDetailView(DetailView):
 
     @classmethod
     def get_slugname(cls) -> str:
+        """Derive the URL slug from the class name.
+
+        Strips the ``detailview`` suffix and lowers the remaining name.
+
+        Returns:
+            The slug string, e.g. ``"category"`` for ``CategoryDetailView``.
+        """
         trimed_view_name = cls.__name__.lower().removesuffix("detailview")
         return trimed_view_name

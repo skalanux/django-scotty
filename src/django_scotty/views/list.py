@@ -1,3 +1,10 @@
+"""List-related generic views for the django-scotty framework.
+
+Provides the main tabular-list view (``CottonTableView``) with
+filtering, pagination, export, and htmx-powered action buttons, as
+well as a simpler dict-based table view (``DictTableView``).
+"""
+
 import logging
 import re
 from collections.abc import Generator
@@ -31,6 +38,37 @@ DEFAULT_EMPTY_MSG = "- No hay datos para mostrar -"
 
 
 class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterView):
+    """Table view with filtering, pagination, export, and htmx actions.
+
+    Combines django-tables2 ``SingleTableMixin``, django-filters
+    ``FilterView``, and htmx-powered action buttons into a single
+    configurable view. Supports bulk and single-row actions, custom
+    extra links, CRUD integration, and export to multiple formats.
+
+    Attributes:
+        model: The Django model class for the table.
+        table_class: The django-tables2 ``Table`` subclass to render.
+        filterset_class: The django-filters ``FilterSet`` for search/filter.
+        paginate_by: Number of items per page. Defaults to 10.
+        template_name: Template path for rendering.
+        formhelper_class: Crispy Forms helper class for filter forms.
+        available_action_names: List of method names exposed as row/bulk actions.
+        show_boton_nuevo: Whether to show a "create new" button.
+        usar_modal: Whether to use modal dialogs for CRUD forms.
+        create_url: Explicit URL name for the create view.
+        createview_class: View class for creating new instances.
+        updateview_class: View class for updating instances.
+        deleteview_class: View class for deleting instances.
+        post_paginate_hook: Callable invoked after pagination.
+        pre_render_hook: Callable invoked before rendering the table.
+        title: Page title shown in the template.
+        subtitle: Optional page subtitle.
+        table_empty_text: Text shown when the table has no rows.
+        show_bulk_actions: Whether bulk action checkboxes are visible.
+        available_filter_buttons: List of filter button identifiers.
+        extra_links_actions: List of extra action-link method names.
+    """
+
     template_name = "django_tables2/base_django_tables2.html"
     formhelper_class = FormHelper
     paginate_by = 10
@@ -54,6 +92,14 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
     extra_links_actions: list[Any] = []
 
     def get_table_kwargs(self) -> dict[str, Any]:
+        """Add available actions and pagination hooks to table kwargs.
+
+        Respects the ``view_only`` query parameter — when set the
+        action list is cleared.
+
+        Returns:
+            The extended kwargs dictionary for table instantiation.
+        """
         kwargs = super().get_table_kwargs()
         view_only = self.request.GET.get("view_only", False) == "true"
 
@@ -68,6 +114,14 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
         return kwargs
 
     def get_table(self, **kwargs: Any) -> Any:
+        """Set the table's view reference and run the pre-render hook.
+
+        Args:
+            **kwargs: Keyword arguments forwarded to the parent.
+
+        Returns:
+            The configured table instance.
+        """
         table = super().get_table(**kwargs)
         table.view = self
 
@@ -76,6 +130,15 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
         return table
 
     def get_filterset(self, filterset_class: type) -> Any:
+        """Build the filterset, stripping empty filter values and
+        attaching a crispy-forms helper.
+
+        Args:
+            filterset_class: The filterset class to instantiate.
+
+        Returns:
+            The configured filterset instance.
+        """
         kwargs = self.get_filterset_kwargs(filterset_class)
         true_filters: dict[str, Any] = {}
         if kwargs["data"]:
@@ -87,6 +150,17 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
         return filterset
 
     def _check_user_perms(self, method: Any) -> bool:
+        """Check whether the current user is allowed to access a method.
+
+        Returns ``True`` for staff users or when no permission is
+        required. Otherwise delegates to ``user.has_perm()``.
+
+        Args:
+            method: The callable (action or link method) to check.
+
+        Returns:
+            ``True`` if the user has the required permission.
+        """
         perm_required = getattr(method, "allowed_permission", None)
         if perm_required is None:
             return True
@@ -98,9 +172,30 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
         return user.has_perm(perm_required)
 
     def _get_link_method(self, name: str) -> Any:
+        """Retrieve a link action method by name from the view.
+
+        Args:
+            name: The method name to look up.
+
+        Returns:
+            The bound method, or ``None`` if it does not exist.
+        """
         return getattr(self, name, None)
 
     def _resolve_link_params(self, name: str, method: Any) -> dict[str, Any]:
+        """Build the URL parameters dict for a link action.
+
+        Merges the ``pk`` attribute, the ``params`` attribute, and the
+        return value of calling the method with the request. Logs a
+        warning when the callable return overrides attribute-based params.
+
+        Args:
+            name: The link action name (used in warning messages).
+            method: The link action callable.
+
+        Returns:
+            A dictionary of resolved URL parameters.
+        """
         params: dict[str, Any] = {}
 
         pk_attr = getattr(method, "pk", None)
@@ -130,6 +225,16 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
         return params
 
     def _get_processed_links(self) -> list[dict[str, Any]]:
+        """Resolve all extra link actions into concrete URL dicts.
+
+        Iterates over ``extra_links_actions``, checks permissions,
+        resolves URL parameters, and returns a sorted list of link
+        dictionaries ready for the template.
+
+        Returns:
+            A list of dicts with ``label``, ``url``, ``btn_class``,
+            and ``order`` keys.
+        """
         processed_links: list[dict[str, Any]] = []
 
         for name in self.extra_links_actions:
@@ -176,6 +281,18 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
         return processed_links
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        """Enrich the template context with table metadata and actions.
+
+        Sets the table's title, subtitle, empty text, CRUD URL names,
+        available actions, filter buttons, and extra links. Respects
+        the ``view_only`` query parameter to disable all actions.
+
+        Args:
+            **kwargs: Keyword arguments forwarded to the parent.
+
+        Returns:
+            The fully populated context dictionary.
+        """
         context = super().get_context_data(**kwargs)
 
         orig_table = context["table"]
@@ -248,6 +365,17 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
         return context
 
     def get_export_filename(self, export_format: str) -> str:
+        """Generate a sanitised filename for table export.
+
+        Strips the ``View`` suffix from the class name, normalises
+        non-alphanumeric characters, and appends the format extension.
+
+        Args:
+            export_format: The file extension (e.g. ``"xls"``, ``"csv"``).
+
+        Returns:
+            The export filename string.
+        """
         class_name = self.__class__.__name__.replace("View", "")
         filename = re.sub(r"[^\w\s-]", "", class_name.lower())
         filename = re.sub(r"[-\s]+", "_", filename)
@@ -255,6 +383,15 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
 
     @property
     def available_actions(self) -> Generator | list:  # type: ignore[override]
+        """Yield available action tuples from the configured action names.
+
+        Each yielded tuple contains ``(action_name, verbose_name,
+        show_on_bulk, show_on_row, show_confirm)``. Falls back to an
+        empty list when ``available_action_names`` is ``None``.
+
+        Yields:
+            Tuples of ``(str, str, bool, bool, bool)`` for each action.
+        """
         if self.available_action_names is not None:
             for action in self.available_action_names:
                 if hasattr(self, action):
@@ -271,6 +408,23 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
             return []
 
     def post(self, request: HttpRequest, *_args: Any, **_kwargs: Any) -> HttpResponse:
+        """Handle POST requests for single or bulk row actions.
+
+        Supports single-row actions via ``?pk=...&action=...`` query
+        parameters and bulk actions via POST body with a list of
+        selected primary keys or a filter query string. For bulk
+        actions a ``finally_<action>`` hook can be called afterwards.
+
+        Args:
+            request: The incoming HTTP request.
+            *_args: Positional args (unused).
+            **_kwargs: Keyword args (unused).
+
+        Returns:
+            An ``HttpResponse`` — either the action's own response
+            (when it returns a status-coded response), the finally
+            hook's response, or a redirect to the current path.
+        """
         if (pk := request.GET.get("pk")) is not None:
             action = request.GET.get("action")
             selected_pks = [pk]
@@ -326,21 +480,57 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
 
     @classmethod
     def get_slugname(cls) -> str:
+        """Derive the URL slug from the class name.
+
+        Strips the ``view`` suffix and lowers the remaining name.
+
+        Returns:
+            The slug string, e.g. ``"category"`` for ``CategoryView``.
+        """
         trimed_view_name = cls.__name__.lower().removesuffix("view")
         return trimed_view_name
 
 
 class DictTableView(ExportMixin, SingleTableView):
+    """Simplified table view backed by a dict-based table class.
+
+    Does not include filtering or htmx-powered actions. Designed for
+    read-only representations such as dashboard summaries or
+    aggregated reports.
+
+    Attributes:
+        model: The Django model class for the table.
+        table_class: The django-tables2 ``Table`` subclass to render.
+        template_name: Template path for the dict-based table.
+        show_export_xls: Whether the XLS export button is visible.
+        show_filter_line: Whether the inline filter bar is visible.
+    """
+
     template_name = "django_tables2/base_django_tables2_dict.html"
     show_export_xls = False
     show_filter_line = False
 
     @classmethod
     def get_slugname(cls) -> str:
+        """Derive the URL slug from the class name.
+
+        Strips the ``view`` suffix and lowers the remaining name.
+
+        Returns:
+            The slug string, e.g. ``"dashboard"`` for ``DashboardView``.
+        """
         trimed_view_name = cls.__name__.lower().removesuffix("view")
         return trimed_view_name
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        """Add export and filter visibility flags to the template context.
+
+        Args:
+            **kwargs: Keyword arguments forwarded to the parent.
+
+        Returns:
+            The enriched context dictionary.
+        """
         context = super().get_context_data(**kwargs)
         context["show_export_xls"] = self.show_export_xls
         context["show_filter_line"] = self.show_filter_line

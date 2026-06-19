@@ -1,3 +1,9 @@
+"""URL auto-discovery for django-scotty views.
+
+Provides utilities to automatically register URL patterns by scanning
+modules for django-scotty view subclasses.
+"""
+
 import importlib
 import inspect
 import logging
@@ -26,6 +32,19 @@ __all__ = [
 
 
 def add_urls(views_modules: list[ModuleType]) -> list[URLPattern]:
+    """Register URL patterns for all django-scotty views found in modules.
+
+    Scans each module for subclasses of CottonTableView, DictTableView,
+    GenericDetailView, GenericCreateView, GenericUpdateView, and
+    GenericDeleteView, registering standard CRUD URL patterns.
+
+    Args:
+        views_modules: List of Python modules to scan for view classes.
+
+    Returns:
+        A list of URLPattern instances ready to be included in
+        ``urlpatterns``.
+    """
     urlpatterns: list[URLPattern] = []
     for module in views_modules:
         for _name, cls in inspect.getmembers(module, inspect.isclass):
@@ -82,6 +101,19 @@ def add_urls(views_modules: list[ModuleType]) -> list[URLPattern]:
 
 
 def load_scotty_urls(app_name: str | None = None) -> list[URLPattern]:
+    """Auto-discover and register django-scotty views for an application.
+
+    Looks for a ``scotty/`` directory inside the given app and imports
+    every module found there, registering their view subclasses as URL
+    patterns.
+
+    Args:
+        app_name: The Django application name. If ``None``, it is inferred
+            from the caller's module path.
+
+    Returns:
+        A list of URLPattern instances for all discovered views.
+    """
     if app_name is None:
         caller_frame = inspect.stack()[1]
         caller_module = inspect.getmodule(caller_frame[0])

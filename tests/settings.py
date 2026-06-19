@@ -1,3 +1,9 @@
+"""Django settings for the test suite.
+
+Configures a minimal in-memory SQLite database, enables required apps,
+and sets up crispy-forms with Bootstrap 5.
+"""
+
 SECRET_KEY = "test-secret-key-not-for-production"
 
 INSTALLED_APPS = [

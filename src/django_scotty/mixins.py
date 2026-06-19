@@ -1,3 +1,9 @@
+"""View mixins for django-scotty.
+
+Provides reusable mixins that integrate django-tables2 pagination with
+htmx-driven modal forms.
+"""
+
 import contextlib
 import logging
 from typing import Any
@@ -23,15 +29,34 @@ class PaginationFixMixin:
 
     Must be placed before a view class (e.g. ListView) in the MRO so that
     ``super().get()`` resolves to the view's ``get`` method.
+
+    Attributes:
+        request: Injected by the view's ``dispatch()`` at runtime.
+        paginate_by: Number of items per page, set on the concrete view.
     """
 
     request: Any  # Django HttpRequest — injected by the view's dispatch()
     paginate_by: int
 
     def get_queryset(self) -> Any:
+        """Return the queryset from the parent view."""
         return super().get_queryset()  # type: ignore[misc]
 
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        """Handle GET requests, redirecting to a valid page on pagination errors.
+
+        Catches ``EmptyPage`` and ``Http404`` exceptions raised when the
+        requested page does not exist, and redirects to the last available
+        page (or page 1 when the queryset is empty).
+
+        Args:
+            request: The incoming HTTP request.
+            *args: Positional arguments forwarded to the parent.
+            **kwargs: Keyword arguments forwarded to the parent.
+
+        Returns:
+            An HTTP response from the parent view, or a redirect.
+        """
         try:
             return super().get(request, *args, **kwargs)  # type: ignore[no-any-return,misc]
         except (EmptyPage, Http404):
@@ -78,11 +103,30 @@ class HtmxFormMixin:
     queryset: Any = None
 
     def get_template_names(self) -> list[str]:
+        """Return the partial template for htmx requests, otherwise delegate.
+
+        Returns:
+            A list of template names to resolve.
+        """
         if self.request and getattr(self.request, "htmx", None):
             return [self.partial_template_name]
         return super().get_template_names()  # type: ignore[no-any-return,misc]
 
     def get_form(self, form_class: Any = None) -> Any:
+        """Configure the form with htmx attributes and optional button bar.
+
+        Attaches ``hx-post``, ``hx-target``, and ``hx-swap`` attributes
+        when the form is rendered inside a modal identified by ``_mid``.
+        Appends the default action buttons unless ``auto_forms_buttons``
+        is ``False``.
+
+        Args:
+            form_class: The form class to instantiate. Defaults to the
+                view's ``form_class`` attribute.
+
+        Returns:
+            The configured form instance.
+        """
         form = super().get_form(form_class)  # type: ignore[misc]
         if not hasattr(form, "helper"):
             return form
@@ -111,11 +155,24 @@ class HtmxFormMixin:
         return form
 
     def _get_model(self) -> Any:
+        """Resolve the model class from the view or its form class.
+
+        Returns:
+            The model class, or ``None`` if it cannot be determined.
+        """
         if self.model:
             return self.model
         return getattr(getattr(self.form_class, "_meta", None), "model", None)
 
     def get_queryset(self) -> Any:
+        """Return the queryset, falling back to the model's default manager.
+
+        When neither ``model`` nor ``queryset`` is set on the view, tries
+        to infer the model from the form class and return all instances.
+
+        Returns:
+            A QuerySet instance.
+        """
         if self.model is None and self.queryset is None:
             model = self._get_model()
             if model:
@@ -123,6 +180,18 @@ class HtmxFormMixin:
         return super().get_queryset()  # type: ignore[misc]
 
     def form_valid(self, form: Any) -> HttpResponse:
+        """Handle a valid form submission, triggering htmx refresh when needed.
+
+        For htmx requests returns an empty response with the
+        ``HX-Refresh`` header set to ``"true"`` so the client reloads the
+        table. Otherwise delegates to the parent.
+
+        Args:
+            form: The validated form instance.
+
+        Returns:
+            An HTTP response.
+        """
         response = super().form_valid(form)  # type: ignore[misc]
         if self.request and getattr(self.request, "htmx", None):
             htmx_response = HttpResponse()
@@ -131,10 +200,26 @@ class HtmxFormMixin:
         return response  # type: ignore[no-any-return]
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        """Extend the template context with form metadata.
+
+        Adds ``partial_template_name`` and ``title_form`` to the context
+        for use by the generic form template.
+
+        Args:
+            **kwargs: Context data from the parent view.
+
+        Returns:
+            The combined context dictionary.
+        """
         context = super().get_context_data(**kwargs)  # type: ignore[misc]
         context["partial_template_name"] = self.partial_template_name
         context["title_form"] = self.title_form
         return context  # type: ignore[no-any-return]
 
     def get_success_url(self) -> str:
+        """Redirect to the list view after a successful form submission.
+
+        Returns:
+            The URL of the list view for this model.
+        """
         return reverse(f"list-view-{self.get_slugname()}")  # type: ignore[attr-defined]

@@ -1,3 +1,9 @@
+"""Shared constants for django-scotty configuration.
+
+Defines lookup keys, variant/style names, and Bootstrap CSS class strings
+used throughout the library.
+"""
+
 from typing import Final
 
 # Config keys

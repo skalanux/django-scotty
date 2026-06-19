@@ -1,3 +1,9 @@
+"""Table classes for django-scotty.
+
+Provides an extended django-tables2 ``Table`` with built-in action
+buttons (edit, delete, custom actions) and view-related metadata.
+"""
+
 import logging
 from typing import Any
 
@@ -15,9 +21,36 @@ __all__ = [
 
 
 class ActionTable(tables.Table):
-    """Extends django-tables2 Table with an acciones column and action buttons."""
+    """Extends django-tables2 Table with an acciones column and action buttons.
+
+    Attributes:
+        view: The parent view instance, set at runtime.
+        updateview_class: View class for the edit action.
+        update_url_name: URL name for the edit endpoint.
+        deleteview_class: View class for the delete action.
+        delete_url_name: URL name for the delete endpoint.
+        usar_modal: Whether actions should open in modals.
+        unique_id: Unique identifier for modal scoping.
+        url_action_method: URL name for custom action endpoints.
+        title: Table display title.
+        subtitle: Optional table subtitle.
+        view_only: When True, hides all action buttons.
+        show_boton_nuevo: Whether to show a "new" button.
+        create_url: URL for the create action.
+        empty_text: Message shown when the table has no rows.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the table with action configuration.
+
+        Pops custom keyword arguments before passing the rest to the
+        parent ``Table`` initializer.
+
+        Args:
+            *args: Positional arguments forwarded to ``tables.Table``.
+            **kwargs: Keyword arguments, may include ``available_actions``
+                and ``post_paginate_hook``.
+        """
         self.action_columns = kwargs.pop("available_actions", [])
         self.post_paginate_hook = kwargs.pop("post_paginate_hook", None)
         super().__init__(*args, **kwargs)
@@ -41,9 +74,31 @@ class ActionTable(tables.Table):
     empty_text: str = ""
 
     def get_ver_link(self, url: str) -> SafeText:
+        """Render a "view" link button for the given URL.
+
+        Args:
+            url: The target URL for the link.
+
+        Returns:
+            A safe HTML anchor element.
+        """
         return SafeText(f'<a href="{url}" class="btn boton-ver"></a>')
 
     def render_acciones(self, record: Any) -> SafeText:  # type: ignore[override]
+        """Render the action buttons column for a single record.
+
+        Builds edit, delete, and custom action buttons depending on which
+        view classes and URL names are configured on the table. Custom
+        actions with a ``condition`` callable are only rendered when the
+        condition passes. Multiple custom actions are grouped into a
+        dropdown menu.
+
+        Args:
+            record: The row object being rendered.
+
+        Returns:
+            Safe HTML containing the action buttons.
+        """
         rendered_edit = SafeText("")
         if getattr(self, "updateview_class", None) is not None:
             try:
@@ -167,6 +222,15 @@ class ActionTable(tables.Table):
             return rendered_edit + rendered_delete
 
     def paginate(self, *args: Any, **kwargs: Any) -> None:
+        """Paginate the table and invoke the post-paginate hook if set.
+
+        Calls the optional ``post_paginate_hook`` callback with the
+        current page's object list after pagination completes.
+
+        Args:
+            *args: Positional arguments forwarded to ``Table.paginate()``.
+            **kwargs: Keyword arguments forwarded to ``Table.paginate()``.
+        """
         super().paginate(*args, **kwargs)
         if self.page and self.post_paginate_hook:
             self.post_paginate_hook(self.page.object_list)

@@ -1,3 +1,11 @@
+"""Deprecated re-exports for backward compatibility.
+
+All symbols are now importable from their canonical modules:
+:mod:`django_scotty.conf`, :mod:`django_scotty.table`,
+:mod:`django_scotty.mixins`, :mod:`django_scotty.views`,
+and :mod:`django_scotty.urls`.
+"""
+
 import warnings
 
 from django_scotty.conf import (
