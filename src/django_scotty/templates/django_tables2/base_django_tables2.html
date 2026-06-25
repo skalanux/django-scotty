@@ -27,7 +27,7 @@
         hx-swap="innerHTML" hx-target="#{{ table.unique_id }}"
         class="form" style="margin-bottom: 10px; margin-top:7px"
     >
-      {% if filter %}
+      {% if show_filter_line and filter %}
           {% for key, value in request.GET.items %}
               {% if key not in filter.form.fields %}
                   <input type="hidden" name="{{ key }}" value="{{ value }}">
