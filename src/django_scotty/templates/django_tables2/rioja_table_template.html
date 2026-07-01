@@ -108,10 +108,61 @@
          {% endif %}
          >Siguiente</a>
     </div>
+      {% if table.show_download_link|default_if_none:True %}
+       <button type="button" class="btn btn-outline-primary export-btn" onclick="exportXLSX(this)"><i class="fas fa-download"></i> <span>Descargar listado</span></button>
+      {% endif %}
+
     <!-- Cierro el dataTables_wrapper -->
   </div>
 
 
   {% endblock pagination %}
+   <script>
+   function exportXLSX(button) {
+     // Find the form - it might be a parent element
+     const form = button.closest('form') || document.querySelector('form');
+
+     // Try to detect the scotty container that rendered this table so we
+     // can call the correct endpoint (it exposes the scotty path in
+     // data-scotty-path when rendered by our overridden template).
+     let scottyPath = null;
+     let ancestor = button.closest('[id]');
+     while (ancestor) {
+       if (ancestor.hasAttribute && ancestor.hasAttribute('data-scotty-path')) {
+         scottyPath = ancestor.getAttribute('data-scotty-path');
+         break;
+       }
+       ancestor = ancestor.parentElement;
+     }
+
+     if (form) {
+       // Get the current form data
+       const formData = new FormData(form);
+
+       // Add the export parameter
+       formData.append('_export', 'xlsx');
+
+       // Prefer the scotty path when available, otherwise fall back to
+       // the form's hx-get, action or current path.
+       const formAction = scottyPath || form.getAttribute('hx-get') || form.action || window.location.pathname;
+       const params = new URLSearchParams();
+
+       // Add form data to URL parameters
+       for (let [key, value] of formData.entries()) {
+         params.append(key, value);
+       }
+
+       // Build the complete URL
+       const downloadUrl = formAction + '?' + params.toString();
+       window.open(downloadUrl, '_blank');
+     } else {
+       // Fallback: use current URL with export parameter
+       const url = new URL(window.location);
+       url.searchParams.set('_export', 'xlsx');
+       window.open(url.toString(), '_blank');
+     }
+   }
+   </script>
+
 </div>
 {% endblock table-wrapper %}

@@ -67,6 +67,7 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
         show_bulk_actions: Whether bulk action checkboxes are visible.
         available_filter_buttons: List of filter button identifiers.
         extra_links_actions: List of extra action-link method names.
+        show_border: Wether the table has a border or not, default to True.
     """
 
     template_name = "django_tables2/base_django_tables2.html"
@@ -90,6 +91,9 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
         "exportar_xls",
     ]
     extra_links_actions: list[Any] = []
+    table_has_borders: bool = True
+    table_show_download_link: bool = True
+    show_filter_line: bool = True
 
     def get_table_kwargs(self) -> dict[str, Any]:
         """Add available actions and pagination hooks to table kwargs.
@@ -310,6 +314,8 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
         orig_table.view_only = view_only
         orig_table.show_boton_nuevo = self.show_boton_nuevo
         orig_table.usar_modal = self.usar_modal
+        orig_table.has_border = self.table_has_borders
+        orig_table.show_download_link = self.table_show_download_link
 
         orig_table.empty_text = (
             self.table_empty_text
@@ -333,7 +339,7 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
             if self.updateview_class is not None
             else None
         )
-
+        orig_table.show_filter_line = self.show_filter_line
         orig_table.deleteview_class = self.deleteview_class
         orig_table.delete_url_name = (
             f"delete-view-{self.deleteview_class.get_slugname()}"
@@ -436,17 +442,20 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
 
         queryset_to_act_on: QuerySet | None = None
 
-        if selected_pks:
-            queryset_to_act_on = self.model.objects.filter(pk__in=selected_pks)
-        elif "filter_query_string" in request.POST:
+        if "filter_query_string" in request.POST:
             filter_params = parse_qs(request.POST["filter_query_string"])
             filter_params.pop("page", None)
             filter_params.pop("per_page", None)
 
-            filterset = self.filterset_class(
-                filter_params, queryset=self.get_queryset()
-            )
-            queryset_to_act_on = filterset.qs
+            if self.filterset_class:
+                filterset = self.filterset_class(
+                    filter_params, queryset=self.get_queryset()
+                )
+                queryset_to_act_on = filterset.qs
+            self.filter_params = filter_params
+
+        if selected_pks:
+            queryset_to_act_on = self.model.objects.filter(pk__in=selected_pks)
 
         if queryset_to_act_on is not None:
             results: list[Any] = []

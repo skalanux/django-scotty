@@ -72,6 +72,7 @@ class ActionTable(tables.Table):
     show_boton_nuevo: bool = False
     create_url: str | None = None
     empty_text: str = ""
+    has_border: bool = True
 
     def get_ver_link(self, url: str) -> SafeText:
         """Render a "view" link button for the given URL.
