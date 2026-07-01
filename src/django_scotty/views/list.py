@@ -9,7 +9,7 @@ import logging
 import re
 from collections.abc import Generator
 from typing import Any
-from urllib.parse import parse_qs, urlencode
+from urllib.parse import parse_qsl, urlencode
 
 from crispy_forms.helper import FormHelper
 from django.db.models import QuerySet
@@ -31,6 +31,7 @@ from django_scotty.constants import (
     VARIANT_PRIMARY,
 )
 from django_scotty.mixins import PaginationFixMixin
+from django_scotty.table import ActionTable
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +71,7 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
         show_border: Wether the table has a border or not, default to True.
     """
 
+    table_class = ActionTable
     template_name = "django_tables2/base_django_tables2.html"
     formhelper_class = FormHelper
     paginate_by = 10
@@ -433,6 +435,8 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
         """
         if (pk := request.GET.get("pk")) is not None:
             action = request.GET.get("action")
+            if action is None:
+                return redirect(request.path)
             selected_pks = [pk]
             is_bulk = False
         else:
@@ -443,7 +447,7 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
         queryset_to_act_on: QuerySet | None = None
 
         if "filter_query_string" in request.POST:
-            filter_params = parse_qs(request.POST["filter_query_string"])
+            filter_params = dict(parse_qsl(request.POST["filter_query_string"]))
             filter_params.pop("page", None)
             filter_params.pop("per_page", None)
 

@@ -6,12 +6,14 @@ Tests exercise the complete stack: URL routing → view → mixins → template 
 from __future__ import annotations
 
 from typing import Any
+from unittest import mock
 
 import pytest
 from django.test import Client
 from django.urls import reverse
 
 from tests.models import DummyItem
+from tests.views import DummyItemListView
 
 pytestmark = [pytest.mark.django_db]
 
@@ -332,3 +334,105 @@ class TestPaginationIntegration:
         url = reverse("list-view-dummyitem")
         response = client.get(url, {"page": "0"})
         assert response.status_code == 302
+
+
+class TestTableConfigRendering:
+    """Integration tests for table configuration flags affecting rendered output.
+
+    Verifies that toggling ``table_has_borders``, ``table_show_download_link``,
+    ``show_filter_line``, and ``title`` produces the expected HTML changes.
+    """
+
+    def test_border_class_present_by_default(
+        self,
+        client: Client,
+        dummy_items: list[DummyItem],
+    ) -> None:
+        """The ``card`` CSS class is present when ``table_has_borders`` is ``True``."""
+        url = reverse("list-view-dummyitem")
+        response = client.get(url)
+        body = response.content.decode()
+        assert 'class=" card  p-4"' in body
+
+    def test_border_class_absent_when_disabled(
+        self,
+        client: Client,
+        dummy_items: list[DummyItem],
+    ) -> None:
+        """The ``card`` CSS class is absent when ``table_has_borders`` is ``False``."""
+        url = reverse("list-view-dummyitem")
+        with mock.patch.object(DummyItemListView, "table_has_borders", False):
+            response = client.get(url)
+        body = response.content.decode()
+        assert 'class=" card  p-4"' not in body
+
+    def test_download_link_visible_by_default(
+        self,
+        client: Client,
+        dummy_items: list[DummyItem],
+    ) -> None:
+        """The download button is rendered when ``show_download_link`` is ``True``."""
+        url = reverse("list-view-dummyitem")
+        response = client.get(url)
+        body = response.content.decode()
+        assert "Descargar listado" in body
+        assert "exportXLSX" in body
+
+    def test_download_link_hidden_when_disabled(
+        self,
+        client: Client,
+        dummy_items: list[DummyItem],
+    ) -> None:
+        """The download button is hidden when ``table_show_download_link`` is ``False``."""
+        url = reverse("list-view-dummyitem")
+        with mock.patch.object(DummyItemListView, "table_show_download_link", False):
+            response = client.get(url)
+        body = response.content.decode()
+        assert "Descargar listado" not in body
+
+    def test_filter_line_present_by_default(
+        self,
+        client: Client,
+        dummy_items: list[DummyItem],
+    ) -> None:
+        """The filter form is present when ``show_filter_line`` is ``True``."""
+        url = reverse("list-view-dummyitem")
+        response = client.get(url)
+        body = response.content.decode()
+        assert "div_id_name" in body  # crispy form field for ``name``
+
+    def test_filter_line_hidden_when_disabled(
+        self,
+        client: Client,
+        dummy_items: list[DummyItem],
+    ) -> None:
+        """The filter form is omitted when ``show_filter_line`` is ``False``."""
+        url = reverse("list-view-dummyitem")
+        with mock.patch.object(DummyItemListView, "show_filter_line", False):
+            response = client.get(url)
+        body = response.content.decode()
+        # The filter form should not appear — crispy fields are not rendered
+        assert 'name="name"' not in body
+
+    def test_title_rendered_by_default(
+        self,
+        client: Client,
+        dummy_items: list[DummyItem],
+    ) -> None:
+        """The title heading is rendered when ``title`` is set."""
+        url = reverse("list-view-dummyitem")
+        response = client.get(url)
+        body = response.content.decode()
+        assert "<h2" in body and "Listado" in body
+
+    def test_title_omitted_when_empty(
+        self,
+        client: Client,
+        dummy_items: list[DummyItem],
+    ) -> None:
+        """The title heading is omitted when ``title`` is empty."""
+        url = reverse("list-view-dummyitem")
+        with mock.patch.object(DummyItemListView, "title", ""):
+            response = client.get(url)
+        body = response.content.decode()
+        assert "<h2" not in body
