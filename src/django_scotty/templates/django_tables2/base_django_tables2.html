@@ -49,7 +49,7 @@
         <div class="bulk-actions mb-2">
           {% for action_id, action_name, action_show_on_bulk, action_show_on_row, action_show_confirm in table.available_actions %}
           {% if forloop.first %}
-          <label for="action">Acción sobre seleccionados:</label>
+          <label for="action">{% if table.bulk_actions_label %}{{ table.bulk_actions_label }}{% else %}Selección:{% endif %}</label>
           <select name="action" id="action" class="select form-select" style="display:inline!important;width:200px;">
             {% endif %}
             {% if action_show_on_bulk %}
