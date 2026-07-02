@@ -64,6 +64,7 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
         pre_render_hook: Callable invoked before rendering the table.
         title: Page title shown in the template.
         subtitle: Optional page subtitle.
+        bulk_actions_label: Optional labels for bulk actions.
         table_empty_text: Text shown when the table has no rows.
         show_bulk_actions: Whether bulk action checkboxes are visible.
         available_filter_buttons: List of filter button identifiers.
@@ -84,8 +85,9 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
     deleteview_class: type | None = None
     post_paginate_hook: Any = None
     pre_render_hook: Any = None
-    title = "Listado"
+    title: str | None = None
     subtitle: str | None = None
+    bulk_actions_label: str | None = None
     table_empty_text: str | None = None
     show_bulk_actions = True
     available_filter_buttons: list[str] | None = [
@@ -313,6 +315,7 @@ class CottonTableView(PaginationFixMixin, ExportMixin, SingleTableMixin, FilterV
         orig_table.unique_id = get_unique_id("django-table-")
         orig_table.title = self.title
         orig_table.subtitle = self.subtitle
+        orig_table.bulk_actions_label = self.bulk_actions_label
         orig_table.view_only = view_only
         orig_table.show_boton_nuevo = self.show_boton_nuevo
         orig_table.usar_modal = self.usar_modal
